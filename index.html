@@ -570,6 +570,993 @@
        To use a real screenshot instead, set image: "screenshots/my-app.png". */
     const PROJECTS = [
       {
+        title: "Ripple Radar",
+        kicker: "Fintech · Data pipeline · Interactive app",
+        featured: true,
+        visual: "radar",
+        desc: "A daily US stock radar. Every weekday after the close, a GitHub Actions job pulls prices, fundamentals, analyst targets and headlines for about 90 stocks, scores each one from 0 to 100, and sorts them into $1–10, $10–50 and $50+ tiers. News ripple chains (crude up → producers up → paint makers squeezed) nudge the scores, a what-if slider replays them, and pinned stocks track their move from the day you pinned them.",
+        tags: ["Python", "yfinance", "GitHub Actions", "JavaScript", "GitHub Pages", "Data viz"],
+        repo: "https://github.com/KirubakaranDevaprasad/Stock-updates-Daily",
+        live: "https://kirubakarandevaprasad.github.io/Stock-updates-Daily/",
+      },
+      {
+        title: "Kiru's Movie Radar",
+        kicker: "Personal app · Makes life easier",
+        visual: "radar",
+        desc: "A personal movie-discovery app that scores every new and upcoming release against my taste: action, comedy and romcom, Rotten Tomatoes acclaim, Oscar pedigree, and closeness to favourites like Gladiator and Titanic. It pulls live posters, routes real drive times to nearby theaters from my current location with Google Maps directions, shows a 3-day ticket outlook and a middle-or-back seat map, and learns from my star ratings of the past year's films to re-rank suggestions.",
+        tags: ["JavaScript", "Geolocation API", "OSRM routing", "Wikipedia API", "Canvas", "GitHub Pages"],
+        repo: "https://github.com/KirubakaranDevaprasad/KirusMovie",
+        live: "https://kirubakarandevaprasad.github.io/KirusMovie/",
+      },
+      {
+        title: "Kiru's Food App",
+        kicker: "Personal app · Makes life easier",
+        visual: "food",
+        desc: "A food finder for eating solo wherever I travel. It pulls real Chinese, Vietnamese and Japanese spots near my live location from OpenStreetMap, with drive and walk times, veg and non-veg and budget filters, new openings and farm-to-table picks. A weighted Surprise me spin and a Taste DNA profile learn from every like and pass.",
+        tags: ["JavaScript", "Geolocation API", "OpenStreetMap Overpass", "OSRM routing", "Wikipedia API", "GitHub Pages"],
+        repo: "https://github.com/KirubakaranDevaprasad/My-Food-Kiru",
+        live: "https://kirubakarandevaprasad.github.io/My-Food-Kiru/",
+      },
+      {
+        title: "Kiru News Network",
+        kicker: "Personal app · Makes life easier",
+        visual: "news",
+        desc: "A personal news channel that leads with tech and tech-company news, then geopolitics. Every story gets a short headline and a one-line summary I can skim or have read aloud, and an impact board sorts the day by what touches me: career, immigration rules, India ties, my wallet, plus war, protests, environment and government change. It builds timed briefings with a TV-style anchor mode and learns from what I open and skip.",
+        tags: ["JavaScript", "Web Speech API", "Wikipedia API", "Federal Register API", "Hacker News API", "GitHub Pages"],
+        repo: "https://github.com/KirubakaranDevaprasad/News-for-Kiru",
+        live: "https://kirubakarandevaprasad.github.io/News-for-Kiru/",
+      },
+      {
+        title: "Kiru's Blueprint",
+        kicker: "Product & architecture tool",
+        visual: "blueprint",
+        desc: "A system design studio and delivery board in one. Describe a system in plain English and a chat assistant draws an editable architecture, writes the design doc with capacity math, and adds banking-grade security, model selection and anti-hallucination practices for GenAI. Detailed per-component design and generated test cases sit alongside it. A Jira-style board then breaks user stories into sized tasks and assigns them by skill and sprint capacity.",
+        tags: ["JavaScript", "SVG canvas", "System design", "GenAI architecture", "Agile delivery", "GitHub Pages"],
+        repo: "https://github.com/KirubakaranDevaprasad/System-Design-Story-Task-Kiru",
+        live: "https://kirubakarandevaprasad.github.io/System-Design-Story-Task-Kiru/",
+      },
+      // ── Add more projects below (copy this shape) ──
+      // {
+      //   title: "Project name",
+      //   kicker: "Category",
+      //   visual: "chart",
+      //   desc: "Two sentences on what it does and why you built it.",
+      //   tags: ["Python", "Streamlit"],
+      //   repo: "https://github.com/KirubakaranDevaprasad/your-repo",
+      //   live: "",
+      // },
+    ];
+
+    /* ════════════════════════════════════════════════════════════
+       Nothing below needs editing
+       ════════════════════════════════════════════════════════════ */
+
+    const $ = (s, r = document) => r.querySelector(s);
+    const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+    const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /* ── Availability text ── */
+    $$("[data-availability-short]").forEach((el) => (el.textContent = CONFIG.availability.short));
+    $$("[data-availability-title]").forEach((el) => (el.textContent = CONFIG.availability.title));
+    $$("[data-availability-detail]").forEach((el) => (el.textContent = CONFIG.availability.detail));
+    $("#year").textContent = new Date().getFullYear();
+
+    /* ── Mobile menu ── */
+    const menuBtn = $("#menuBtn"), mobileMenu = $("#mobileMenu"), menuIcon = $("#menuIcon");
+    function setMenu(open) {
+      mobileMenu.hidden = !open;
+      menuBtn.setAttribute("aria-expanded", String(open));
+      menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      menuIcon.innerHTML = open ? '<path d="M6 6l12 12M18 6 6 18"/>' : '<path d="M4 7h16M4 12h16M4 17h10"/>';
+    }
+    menuBtn.addEventListener("click", () => setMenu(mobileMenu.hidden));
+    $$("#mobileMenu a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
+    window.addEventListener("resize", () => { if (window.innerWidth >= 768) setMenu(false); });
+
+    /* ── Active nav link while scrolling ── */
+    const navLinks = $$(".nav-link");
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        navLinks.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + entry.target.id));
+      });
+    }, { rootMargin: "-40% 0px -55% 0px" });
+    $$("main section[id]").forEach((s) => sectionObserver.observe(s));
+
+    /* ── Project visuals (inline SVG, no external images) ── */
+    const VISUALS = {
+      pipeline: `
+        <svg viewBox="0 0 560 260" class="h-full w-full" role="img" aria-label="Pipeline diagram: Yahoo Finance to fetch, clean, and PostgreSQL, with a price chart">
+          <defs>
+            <linearGradient id="g-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".35"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient>
+          </defs>
+          <g font-family="JetBrains Mono, monospace" font-size="11">
+            <rect x="20" y="28" width="104" height="44" rx="10" fill="#FFFFFF" stroke="#E3E6EF"/>
+            <text x="72" y="55" text-anchor="middle" fill="#5B6478">yfinance</text>
+            <rect x="160" y="28" width="104" height="44" rx="10" fill="#FFFFFF" stroke="currentColor"/>
+            <text x="212" y="55" text-anchor="middle" fill="#0F172A">fetch</text>
+            <rect x="300" y="28" width="104" height="44" rx="10" fill="#FFFFFF" stroke="currentColor"/>
+            <text x="352" y="55" text-anchor="middle" fill="#0F172A">clean</text>
+            <rect x="440" y="28" width="104" height="44" rx="10" fill="#FFFFFF" stroke="#E3E6EF"/>
+            <text x="492" y="55" text-anchor="middle" fill="#5B6478">postgres</text>
+            <path d="M124 50H160M264 50H300M404 50H440" stroke="currentColor" stroke-width="2" fill="none" class="flow"/>
+            <text x="20" y="104" fill="#5B6478">AAPL · MSFT · GOOGL · AMZN · NVDA · TSLA · META</text>
+            <text x="544" y="104" text-anchor="end" fill="#16A34A">● run ok</text>
+          </g>
+          <path d="M20 230 L60 214 L100 220 L140 196 L180 204 L220 178 L260 186 L300 160 L340 170 L380 146 L420 152 L460 128 L500 136 L540 118 L540 246 L20 246 Z" fill="url(#g-area)"/>
+          <path d="M20 230 L60 214 L100 220 L140 196 L180 204 L220 178 L260 186 L300 160 L340 170 L380 146 L420 152 L460 128 L500 136 L540 118" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+          <circle cx="540" cy="118" r="5" fill="currentColor" stroke="#FFFFFF" stroke-width="3"/>
+          <g stroke="#E3E6EF" stroke-dasharray="2 6"><path d="M20 140H540M20 190H540"/></g>
+        </svg>`,
+      radar: `
+        <svg viewBox="0 0 560 260" class="h-full w-full" role="img" aria-label="Kiru’s Movie Radar preview: a film ticket with a fit score ring and star rating">
+          <rect x="40" y="40" width="300" height="180" rx="16" fill="#FFFFFF" stroke="#E3E6EF"/>
+          <path d="M40 160H340" stroke="#E3E6EF" stroke-dasharray="6 6"/>
+          <g font-family="JetBrains Mono, monospace" font-size="12">
+            <text x="64" y="76" fill="#5B6478">NOW SHOWING · PARSIPPANY</text>
+            <text x="64" y="110" fill="#0F172A" font-size="22" font-weight="700">The Odyssey</text>
+            <text x="64" y="136" fill="#5B6478">Action / Epic · RT 94%</text>
+            <text x="64" y="196" fill="currentColor" font-size="20">★★★★★</text>
+          </g>
+          <circle cx="440" cy="130" r="62" fill="none" stroke="#E3E6EF" stroke-width="14"/>
+          <circle cx="440" cy="130" r="62" fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-dasharray="350 390" transform="rotate(-90 440 130)"/>
+          <text x="440" y="138" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="28" font-weight="700" fill="#0F172A">91</text>
+          <text x="440" y="160" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#5B6478">FIT</text>
+        </svg>`,
+      food: `
+        <svg viewBox="0 0 560 260" class="h-full w-full" role="img" aria-label="Kiru’s Food App preview: a noodle bowl with location pins and a match score">
+          <rect x="40" y="36" width="300" height="190" rx="18" fill="#FFFFFF" stroke="#E3E6EF"/>
+          <path d="M80 140h220a110 70 0 0 1-220 0z" fill="currentColor" opacity=".9"/>
+          <path d="M100 140c20-30 40 10 60-20s40 10 60-20 40 10 60-10" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+          <path d="M210 70l50 70M230 62l45 78" stroke="#0F172A" stroke-width="6" stroke-linecap="round"/>
+          <g font-family="JetBrains Mono, monospace" font-size="12" fill="#5B6478"><text x="64" y="214">PHO · 6 MIN · $</text></g>
+          <g fill="currentColor"><circle cx="420" cy="80" r="16"/><circle cx="480" cy="140" r="12" opacity=".6"/><circle cx="400" cy="180" r="10" opacity=".4"/></g>
+          <g fill="#FFFFFF"><circle cx="420" cy="80" r="6"/></g>
+          <text x="440" y="236" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="22" font-weight="700" fill="#0F172A">94% match</text>
+        </svg>`,
+      news: `
+        <svg viewBox="0 0 560 260" class="h-full w-full" role="img" aria-label="Kiru News Network preview: a live broadcast frame with a ticker and category bars">
+          <rect x="30" y="26" width="500" height="208" rx="14" fill="#FFFFFF" stroke="#E3E6EF"/>
+          <rect x="30" y="26" width="500" height="34" rx="14" fill="#0F172A"/>
+          <rect x="44" y="34" width="54" height="18" rx="3" fill="#E11D48"/>
+          <g font-family="JetBrains Mono, monospace" font-size="11" font-weight="700"><text x="71" y="47" text-anchor="middle" fill="#FFFFFF">LIVE</text><text x="112" y="47" fill="#FFFFFF">KIRU NEWS NETWORK</text></g>
+          <rect x="50" y="78" width="250" height="16" rx="4" fill="#0F172A" opacity=".85"/>
+          <rect x="50" y="102" width="200" height="12" rx="4" fill="#E3E6EF"/><rect x="50" y="120" width="230" height="12" rx="4" fill="#E3E6EF"/>
+          <g fill="currentColor"><rect x="340" y="150" width="22" height="50" rx="3"/><rect x="370" y="120" width="22" height="80" rx="3" opacity=".8"/><rect x="400" y="135" width="22" height="65" rx="3" opacity=".6"/><rect x="430" y="100" width="22" height="100" rx="3"/><rect x="460" y="160" width="22" height="40" rx="3" opacity=".5"/></g>
+          <rect x="30" y="206" width="500" height="28" fill="#F59E0B"/>
+          <text x="44" y="225" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#1F1300">BREAKING ◆ 11 BEATS ◆ BRIEFING READY IN 10 MIN ◆</text>
+        </svg>`,
+      blueprint: `
+        <svg viewBox="0 0 560 260" class="h-full w-full" role="img" aria-label="Kiru’s Blueprint preview: architecture boxes connected by arrows next to a kanban column">
+          <defs><pattern id="bpg" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#E3E6EF"/></pattern></defs>
+          <rect x="20" y="20" width="360" height="220" rx="14" fill="url(#bpg)" stroke="#E3E6EF"/>
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#0F172A">
+            <rect x="36" y="110" width="70" height="34" rx="8" fill="#FFFFFF" stroke="#CBD5E1"/><text x="71" y="131" text-anchor="middle">client</text>
+            <rect x="140" y="110" width="80" height="34" rx="8" fill="#FFFFFF" stroke="#CBD5E1"/><text x="180" y="131" text-anchor="middle">gateway</text>
+            <rect x="256" y="50" width="100" height="34" rx="8" fill="#FFFFFF" stroke="currentColor" stroke-width="2"/><text x="306" y="71" text-anchor="middle">LLM + guard</text>
+            <rect x="256" y="110" width="100" height="34" rx="8" fill="#FFFFFF" stroke="#CBD5E1"/><text x="306" y="131" text-anchor="middle">services</text>
+            <rect x="256" y="170" width="100" height="34" rx="8" fill="#FFFFFF" stroke="#CBD5E1"/><text x="306" y="191" text-anchor="middle">postgres</text>
+          </g>
+          <g stroke="#94A3B8" stroke-width="1.6" fill="none"><path d="M106 127H140"/><path d="M220 127H256"/><path d="M220 127C238 127 238 67 256 67"/><path d="M220 127C238 127 238 187 256 187" stroke-dasharray="5 4"/></g>
+          <rect x="400" y="20" width="140" height="220" rx="14" fill="#F1F3F8"/>
+          <g fill="#FFFFFF" stroke="#E3E6EF"><rect x="412" y="40" width="116" height="40" rx="8"/><rect x="412" y="90" width="116" height="40" rx="8"/><rect x="412" y="140" width="116" height="40" rx="8"/></g>
+          <g fill="currentColor"><rect x="412" y="40" width="4" height="40" rx="2"/><rect x="412" y="90" width="4" height="40" rx="2" opacity=".6"/><rect x="412" y="140" width="4" height="40" rx="2" opacity=".35"/></g>
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#5B6478"><text x="424" y="64">API · 3 pts</text><text x="424" y="114">UI · 5 pts</text><text x="424" y="164">Tests · 2 pts</text></g>
+        </svg>`,
+      radar: `
+        <svg viewBox="0 0 560 260" class="h-full w-full" role="img" aria-label="Radar sweep with stocks plotted by score and price tier">
+          <g fill="none" stroke="#E3E6EF" stroke-width="1.5"><circle cx="130" cy="130" r="110"/><circle cx="130" cy="130" r="80"/><circle cx="130" cy="130" r="50"/><circle cx="130" cy="130" r="20"/></g>
+          <path d="M130 130 L130 20 A110 110 0 0 1 225 75 Z" fill="currentColor" opacity=".16"/>
+          <line x1="130" y1="130" x2="225" y2="75" stroke="currentColor" stroke-width="2"/>
+          <g><circle cx="160" cy="70" r="6" fill="#FF7A45"/><circle cx="95" cy="88" r="6" fill="#3B82F6"/><circle cx="190" cy="150" r="6" fill="#9B5DE5"/><circle cx="110" cy="190" r="6" fill="#FF7A45"/><circle cx="70" cy="140" r="6" fill="#9B5DE5"/><circle cx="150" cy="110" r="6" fill="#3B82F6"/></g>
+          <circle cx="130" cy="130" r="7" fill="#FFC83D"/>
+          <g font-family="JetBrains Mono, monospace" font-size="11">
+            <rect x="282" y="34" width="250" height="40" rx="10" fill="#FFFFFF" stroke="#E3E6EF"/><text x="298" y="58" fill="#5B6478">Crude</text><text x="516" y="58" text-anchor="end" fill="#16A34A">▲ tailwind</text>
+            <rect x="282" y="86" width="250" height="40" rx="10" fill="#FFFFFF" stroke="#E3E6EF"/><text x="298" y="110" fill="#5B6478">Producers & tankers</text><text x="516" y="110" text-anchor="end" fill="#16A34A">+9 pts</text>
+            <rect x="282" y="138" width="250" height="40" rx="10" fill="#FFFFFF" stroke="#E3E6EF"/><text x="298" y="162" fill="#5B6478">Paint & coatings</text><text x="516" y="162" text-anchor="end" fill="#E11D48">−7 pts</text>
+            <rect x="282" y="190" width="250" height="40" rx="10" fill="#FFFFFF" stroke="#E3E6EF"/><text x="298" y="214" fill="#5B6478">$1–10 · $10–50 · $50+</text><text x="516" y="214" text-anchor="end" fill="currentColor">tiers</text>
+          </g>
+        </svg>`,
+      chart: `
+        <svg viewBox="0 0 560 260" class="h-full w-full" role="img" aria-label="Bar chart placeholder">
+          <g fill="currentColor">
+            <rect x="40" y="150" width="40" height="90" rx="6" opacity=".35"/><rect x="110" y="110" width="40" height="130" rx="6" opacity=".5"/>
+            <rect x="180" y="130" width="40" height="110" rx="6" opacity=".4"/><rect x="250" y="80" width="40" height="160" rx="6" opacity=".7"/>
+            <rect x="320" y="100" width="40" height="140" rx="6" opacity=".55"/><rect x="390" y="50" width="40" height="190" rx="6"/>
+            <rect x="460" y="70" width="40" height="170" rx="6" opacity=".8"/>
+          </g>
+        </svg>`,
+      blocks: `
+        <svg viewBox="0 0 560 260" class="h-full w-full" role="img" aria-label="App interface placeholder">
+          <rect x="30" y="30" width="500" height="200" rx="14" fill="#FFFFFF" stroke="#E3E6EF"/>
+          <rect x="30" y="30" width="120" height="200" rx="14" fill="#F1F3F8"/>
+          <g fill="#E3E6EF"><rect x="50" y="60" width="80" height="10" rx="5"/><rect x="50" y="84" width="60" height="10" rx="5"/><rect x="50" y="108" width="70" height="10" rx="5"/></g>
+          <rect x="175" y="60" width="160" height="70" rx="10" fill="currentColor" opacity=".25"/>
+          <rect x="350" y="60" width="160" height="70" rx="10" fill="#E3E6EF"/>
+          <rect x="175" y="145" width="335" height="60" rx="10" fill="#E3E6EF"/>
+        </svg>`,
+    };
+
+    function linkIcon(kind) {
+      return kind === "repo"
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>';
+    }
+
+    function renderProjects() {
+      const grid = $("#projectGrid");
+      const cards = PROJECTS.map((p, i) => {
+        const wide = p.featured ? "md:col-span-2 lg:col-span-3 lg:grid lg:grid-cols-12" : "";
+        const media = p.image
+          ? `<img src="${esc(p.image)}" alt="Screenshot of ${esc(p.title)}" class="h-full w-full object-cover" loading="lazy">`
+          : VISUALS[p.visual] || VISUALS.blocks;
+        const tags = (p.tags || []).map((t) => `<li class="rounded-full border border-line px-2.5 py-0.5 font-mono text-[11px] text-mist">${esc(t)}</li>`).join("");
+        const links = [
+          p.repo ? `<a href="${esc(p.repo)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-1.5 text-sm font-semibold transition hover:border-volt hover:text-volt">${linkIcon("repo")} Code</a>` : "",
+          p.live ? `<a href="${esc(p.live)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-1.5 text-sm font-semibold transition hover:border-volt hover:text-volt">${linkIcon("live")} Live</a>` : "",
+        ].join("");
+        return `
+          <article class="group overflow-hidden rounded-3xl border border-line bg-ink transition duration-300 hover:-translate-y-1 hover:border-volt/60 hover:shadow-[0_24px_60px_-30px_rgb(var(--sec)/.55)] ${wide}">
+            <figure class="relative aspect-[16/9] max-w-full overflow-hidden border-b border-line bg-deck ${p.featured ? "lg:col-span-7 lg:aspect-auto lg:min-h-[340px] lg:border-b-0 lg:border-r" : ""}">
+              <div class="absolute inset-0 p-4 text-volt transition duration-500 group-hover:scale-[1.02]">${media}</div>
+              <figcaption class="absolute left-4 top-4 rounded-full bg-ink/90 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-mist backdrop-blur">
+                ${p.featured ? "Featured · " : ""}P${String(i + 1).padStart(2, "0")}
+              </figcaption>
+            </figure>
+            <div class="flex flex-col gap-4 p-6 sm:p-8 ${p.featured ? "lg:col-span-5" : ""}">
+              <p class="font-mono text-[11px] uppercase tracking-[.2em] text-volt">${esc(p.kicker || "")}</p>
+              <h3 class="${p.featured ? "text-3xl" : "text-xl"} font-extrabold tracking-tight">${esc(p.title)}</h3>
+              <p class="leading-relaxed text-mist">${esc(p.desc)}</p>
+              <ul class="flex flex-wrap gap-2" aria-label="Tools used">${tags}</ul>
+              <div class="mt-auto flex flex-wrap gap-3 pt-2">${links}</div>
+            </div>
+          </article>`;
+      });
+
+      // An honest "next up" tile keeps the grid balanced while there is only one project.
+      const others = PROJECTS.filter((p) => !p.featured).length;
+      if (others % 3 !== 0 || others === 0) {
+        cards.push(`
+          <a href="https://github.com/KirubakaranDevaprasad" target="_blank" rel="noopener" class="group flex min-h-[220px] flex-col justify-between rounded-3xl border border-dashed border-line p-8 transition hover:border-volt/60 hover:bg-ink ${others === 0 ? "md:col-span-2 lg:col-span-3 md:flex-row md:items-center" : ""}">
+            <div>
+              <p class="font-mono text-[11px] uppercase tracking-[.2em] text-mist">More on GitHub</p>
+              <p class="mt-3 max-w-[48ch] text-xl font-bold">Smaller experiments, scripts, and works in progress live in my repositories.</p>
+            </div>
+            <span class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-volt md:mt-0">Browse repositories ${linkIcon("live")}</span>
+          </a>`);
+      }
+      grid.innerHTML = cards.join("");
+    }
+    renderProjects();
+
+    /* ── Copy email ── */
+    $("#copyEmail").addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      const selectEmail = () => {
+        const range = document.createRange();
+        range.selectNodeContents($("#emailText"));
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      };
+      try {
+        await navigator.clipboard.writeText(CONFIG.email);
+        btn.textContent = "Copied";
+      } catch (_) {
+        selectEmail();
+        btn.textContent = "Selected";
+      }
+      setTimeout(() => (btn.textContent = "Copy"), 1800);
+    });
+
+    /* ── Contact form ── */
+    const form = $("#contactForm"), statusEl = $("#formStatus"), sendBtn = $("#sendBtn");
+
+    function showError(id, show) {
+      const input = $("#" + id);
+      $(`[data-error-for="${id}"]`).classList.toggle("hidden", !show);
+      input.classList.toggle("border-rose-500", show);
+      input.setAttribute("aria-invalid", String(show));
+    }
+    function validate() {
+      const name = $("#cf-name").value.trim();
+      const email = $("#cf-email").value.trim();
+      const message = $("#cf-message").value.trim();
+      const okName = name.length > 1;
+      const okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+      const okMsg = message.length >= 10;
+      showError("cf-name", !okName);
+      showError("cf-email", !okEmail);
+      showError("cf-message", !okMsg);
+      return okName && okEmail && okMsg;
+    }
+    function setStatus(kind, text) {
+      statusEl.className = "mt-4 rounded-xl px-4 py-3 text-sm " + (kind === "ok" ? "bg-go/10 text-green-700" : "bg-rose-500/10 text-rose-700");
+      statusEl.textContent = text;
+    }
+    ["cf-name", "cf-email", "cf-message"].forEach((id) =>
+      $("#" + id).addEventListener("blur", () => { if ($("#" + id).getAttribute("aria-invalid") === "true") validate(); })
+    );
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!validate()) {
+        setStatus("err", "A few fields need attention before this can send.");
+        return;
+      }
+      const data = {
+        name: $("#cf-name").value.trim(),
+        email: $("#cf-email").value.trim(),
+        topic: $("#cf-topic").value,
+        message: $("#cf-message").value.trim(),
+      };
+
+      if (CONFIG.formEndpoint) {
+        sendBtn.disabled = true;
+        try {
+          const res = await fetch(CONFIG.formEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify(data),
+          });
+          if (!res.ok) throw new Error("bad status");
+          form.reset();
+          setStatus("ok", `Thanks, ${data.name}. Your message was sent. I'll reply to ${data.email}.`);
+        } catch (_) {
+          setStatus("err", `The message didn't go through. Please email me directly at ${CONFIG.email}.`);
+        } finally {
+          sendBtn.disabled = false;
+        }
+        return;
+      }
+
+      // No endpoint configured: hand off to the visitor's email app.
+      const subject = encodeURIComponent(`[Portfolio] ${data.topic} from ${data.name}`);
+      const body = encodeURIComponent(`${data.message}\n\n${data.name}\n${data.email}`);
+      window.location.href = `mailto:${CONFIG.email}?subject=${subject}&body=${body}`;
+      setStatus("ok", `Your email app should open with the message ready to send. If it doesn't, write to ${CONFIG.email}.`);
+    });
+
+    /* ── Engagement estimator (simulation) ── */
+    const EST = {
+      base: { discovery: 4, release: 6, ai: 8, analytics: 5, data: 5, screening: 7 },
+      labels: { discovery: "Product discovery & roadmap", release: "Release governance setup", ai: "AI / ML release controls", analytics: "Analytics & KPI dashboards", data: "Data pipeline (ETL) build", screening: "Sanctions screening configuration" },
+      complexity: ["Very low", "Low", "Medium", "High", "Very high"],
+      phases: [
+        { name: "Discovery", share: 0.2, color: "#0D9488" },
+        { name: "Build & configure", share: 0.45, color: "#EA580C" },
+        { name: "Test & validate", share: 0.2, color: "#0284C7" },
+        { name: "Release & handover", share: 0.15, color: "#E11D48" },
+      ],
+    };
+    let lastEstimate = null;
+
+    function estimate() {
+      const type = $("#est-type").value;
+      const c = Number($("#est-complex").value);
+      const integrations = Number($("#est-int").value);
+      const team = Number($("#est-team").value);
+      const regulated = $('input[name="est-reg"]:checked').value === "yes";
+
+      let weeks = EST.base[type];
+      weeks *= 0.7 + c * 0.15;                       // complexity: 0.85x – 1.45x
+      weeks += integrations * 0.3;                   // each integration adds ~1.5 days
+      weeks *= regulated ? 1.25 : 1;                 // approvals and audit trail
+      weeks /= 1 + Math.min(team - 1, 7) * 0.07;     // diminishing returns on headcount
+
+      const low = Math.max(2, Math.round(weeks * 0.85));
+      const high = Math.max(low + 1, Math.round(weeks * 1.25));
+      const confidence = c >= 4 || integrations > 12 ? "low" : c <= 2 && integrations <= 4 ? "high" : "medium";
+
+      $("#out-complex").textContent = EST.complexity[c - 1];
+      $("#out-int").textContent = integrations;
+      $("#out-team").textContent = team;
+      $("#est-range").textContent = `${low}–${high}`;
+      $("#est-confidence").textContent = `Confidence: ${confidence}${regulated ? " · includes compliance sign-offs" : ""}`;
+
+      const mid = (low + high) / 2;
+      $("#est-bar").innerHTML = EST.phases
+        .map((p) => `<span style="width:${p.share * 100}%;background:${p.color}" class="h-full transition-all duration-300" title="${p.name}"></span>`)
+        .join("");
+      $("#est-phases").innerHTML = EST.phases
+        .map((p) => `<li class="flex items-center gap-2"><span class="h-2 w-2 shrink-0 rounded-full" style="background:${p.color}"></span><span class="text-mist">${p.name}</span><span class="ml-auto font-mono tabular-nums text-paper">${(mid * p.share).toFixed(1)}w</span></li>`)
+        .join("");
+
+      lastEstimate = { type: EST.labels[type], complexity: EST.complexity[c - 1], integrations, team, regulated, low, high };
+    }
+    $("#estForm").addEventListener("input", estimate);
+    $("#estForm").addEventListener("submit", (e) => e.preventDefault());
+    estimate();
+
+    $("#useEstimate").addEventListener("click", () => {
+      if (!lastEstimate) return;
+      const e = lastEstimate;
+      const note =
+        `Rough scope from your estimator:\n` +
+        `• ${e.type}\n• Complexity: ${e.complexity}, ${e.integrations} integrations, team of ${e.team}${e.regulated ? ", regulated" : ""}\n` +
+        `• Estimated ${e.low}–${e.high} weeks\n\n`;
+      const msg = $("#cf-message");
+      msg.value = note + msg.value.replace(/^Rough scope from your estimator:[\s\S]*?\n\n/, "");
+      $("#cf-topic").value = "A consulting engagement";
+      $("#contactForm").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+      setTimeout(() => $("#cf-name").focus({ preventScroll: true }), reduceMotion ? 0 : 500);
+    });
+  </script>
+</body>
+</html>
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Kirubakaran Devaprasad | Technical Product Manager</title>
+  <meta name="description" content="Kirubakaran Devaprasad is a Technical Product Manager with 12+ years across AI platforms, banking compliance, and enterprise release management.">
+  <meta name="author" content="Kirubakaran Devaprasad">
+  <meta name="theme-color" content="#FFFFFF">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Kirubakaran Devaprasad | Technical Product Manager">
+  <meta property="og:description" content="AI product delivery, release governance, and data pipelines. Projects, experience, and contact.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0F1A'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-style='italic' font-size='30' fill='%237B7BFF' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+
+  <!-- Tailwind (pinned) -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink:     "#FFFFFF",  // page background, white
+            deck:    "#F7F8FC",  // raised surfaces
+            deck2:   "#EFF1F8",  // hover surfaces
+            line:    "#E3E6EF",  // hairlines
+            paper:   "#0F172A",  // primary text, deep slate
+            mist:    "#5B6478",  // secondary text
+            volt:    "rgb(var(--sec) / <alpha-value>)",  // accent: changes per section
+            go:      "#16A34A",  // availability / success
+          },
+          fontFamily: {
+            display: ['"Instrument Serif"', "Georgia", "Times New Roman", "serif"],
+            sans:    ["Manrope", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
+            mono:    ['"JetBrains Mono"', "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
+          },
+          maxWidth: { frame: "1180px" },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* Each section sets its own highlight colour via --sec (R G B) */
+    :root   { color-scheme: light; --sec: 79 70 229; }   /* indigo: nav, hero, footer */
+    #about  { --sec: 13 148 136; }   /* teal */
+    #work   { --sec: 234 88 12; }    /* orange */
+    #experience { --sec: 2 132 199; }/* sky blue */
+    #contact { --sec: 225 29 72; }   /* rose */
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      background: #FFFFFF;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    /* Faint blueprint grid behind everything */
+    body::before {
+      content: "";
+      position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(79,70,229,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,70,229,.05) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse at 70% 0%, #000 0%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse at 70% 0%, #000 0%, transparent 70%);
+    }
+    .gutter {
+      padding-left: max(20px, env(safe-area-inset-left, 0px));
+      padding-right: max(20px, env(safe-area-inset-right, 0px));
+    }
+    h1, h2, h3 { text-wrap: balance; }
+    section[id] { scroll-margin-top: 88px; }
+
+    /* Hero entrance: starts visible, only shifts */
+    @keyframes rise { from { transform: translateY(14px); opacity: .001; } to { transform: none; opacity: 1; } }
+    .rise { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; }
+    .d1 { animation-delay: .05s } .d2 { animation-delay: .15s } .d3 { animation-delay: .25s } .d4 { animation-delay: .35s }
+
+    /* Pulsing availability dot */
+    @keyframes ping { 0% { transform: scale(1); opacity: .7 } 80%,100% { transform: scale(2.4); opacity: 0 } }
+    .ping::after { content: ""; position: absolute; inset: 0; border-radius: 9999px; background: currentColor; animation: ping 2s cubic-bezier(0,0,.2,1) infinite; }
+
+    /* Pipeline flow animation in the project visual */
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    .flow { stroke-dasharray: 4 8; animation: flow 1.2s linear infinite; }
+
+    /* Range slider */
+    input[type=range] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 9999px; background: #E3E6EF; outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 9999px; background: rgb(var(--sec)); border: 3px solid #FFFFFF; box-shadow: 0 0 0 1px rgb(var(--sec)); cursor: pointer; }
+    input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 9999px; background: rgb(var(--sec)); border: 3px solid #FFFFFF; cursor: pointer; }
+    input[type=range]:focus-visible { box-shadow: 0 0 0 3px rgb(var(--sec) / .35); }
+
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%238C95B0'%3E%3Cpath d='M5.5 7.5 10 12l4.5-4.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .75rem center; background-size: 1.1rem; }
+
+    .nav-link.active { color: rgb(var(--sec)); }
+    .nav-link.active::after { transform: scaleX(1); }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+
+<body class="font-sans antialiased selection:bg-volt/30 selection:text-paper">
+
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:rounded-md focus:bg-volt focus:px-4 focus:py-2 focus:text-white">Skip to content</a>
+
+  <!-- ───────────────── NAVIGATION ───────────────── -->
+  <header id="top" class="sticky top-0 z-50 border-b border-line/70 bg-ink/70 backdrop-blur-xl supports-[backdrop-filter]:bg-ink/55">
+    <nav class="gutter mx-auto flex h-16 max-w-frame items-center justify-between" aria-label="Primary">
+      <a href="#top" class="group flex items-baseline gap-2" aria-label="Kirubakaran Devaprasad, back to top">
+        <span class="font-display text-[1.35rem] italic leading-none text-paper transition group-hover:text-volt sm:text-2xl">Kirubakaran <span class="text-volt">Devaprasad</span></span>
+      </a>
+
+      <ul class="hidden items-center gap-8 text-sm font-medium text-mist md:flex">
+        <li><a class="nav-link relative py-1 transition hover:text-paper after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-volt after:transition-transform" style="--sec: 13 148 136" href="#about">About</a></li>
+        <li><a class="nav-link relative py-1 transition hover:text-paper after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-volt after:transition-transform" style="--sec: 234 88 12" href="#work">Work</a></li>
+        <li><a class="nav-link relative py-1 transition hover:text-paper after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-volt after:transition-transform" style="--sec: 2 132 199" href="#experience">Experience</a></li>
+        <li><a class="nav-link relative py-1 transition hover:text-paper after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-volt after:transition-transform" style="--sec: 225 29 72" href="#contact">Contact</a></li>
+      </ul>
+
+      <div class="flex items-center gap-3">
+        <a href="#contact" class="hidden items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold text-paper transition hover:border-volt hover:bg-volt/10 sm:inline-flex">
+          <span class="ping relative inline-block h-2 w-2 rounded-full bg-go text-go"></span>
+          <span data-availability-short>Open to roles</span>
+        </a>
+        <button id="menuBtn" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-line text-paper md:hidden" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
+          <svg id="menuIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <div id="mobileMenu" class="gutter border-t border-line/70 md:hidden" hidden>
+      <ul class="mx-auto flex max-w-frame flex-col py-3 text-base font-medium">
+        <li><a class="block py-3 text-mist hover:text-volt" style="--sec: 13 148 136" href="#about">About</a></li>
+        <li><a class="block py-3 text-mist hover:text-volt" style="--sec: 234 88 12" href="#work">Work</a></li>
+        <li><a class="block py-3 text-mist hover:text-volt" style="--sec: 2 132 199" href="#experience">Experience</a></li>
+        <li><a class="block py-3 text-mist hover:text-volt" style="--sec: 225 29 72" href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ───────────────── HERO ───────────────── -->
+    <section aria-labelledby="hero-title" class="gutter relative overflow-hidden">
+      <div aria-hidden="true" class="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full bg-volt/15 blur-[120px]"></div>
+
+      <div class="relative mx-auto grid max-w-frame gap-12 pb-20 pt-16 md:pt-24 lg:grid-cols-12 lg:gap-10 lg:pb-28">
+        <div class="lg:col-span-7">
+          <p class="rise d1 mb-6 font-mono text-xs uppercase tracking-[.22em] text-volt">Technical Product Manager · New Jersey, USA</p>
+          <h1 id="hero-title" class="rise d2 text-[2.6rem] font-extrabold leading-[1.02] tracking-tight sm:text-6xl lg:text-[4.6rem]">
+            I turn tangled requirements into products teams can
+            <span class="font-display font-normal italic text-volt">actually ship.</span>
+          </h1>
+          <p class="rise d3 mt-7 max-w-[56ch] text-lg leading-relaxed text-mist">
+            12+ years across AI platforms, banking compliance, and enterprise release management. Right now I lead product for an
+            AI-powered customer intelligence platform at <span class="text-paper">HubSpot</span>, where the job is part roadmap, part
+            release discipline, and part translator between engineers and the business.
+          </p>
+          <div class="rise d4 mt-10 flex flex-wrap items-center gap-4">
+            <a href="#work" class="group inline-flex items-center gap-2 rounded-full bg-volt px-6 py-3.5 text-sm font-bold text-ink shadow-[0_10px_40px_-10px_rgb(var(--sec)/.7)] transition hover:bg-paper">
+              View My Work
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="transition group-hover:translate-x-0.5" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a href="#contact" class="inline-flex items-center gap-2 rounded-full border border-line px-6 py-3.5 text-sm font-bold text-paper transition hover:border-volt hover:text-volt">
+              Get in touch
+            </a>
+          </div>
+        </div>
+
+        <!-- Release-note card: signature metrics presented as a shipped release -->
+        <aside class="rise d3 lg:col-span-5 lg:pt-6" aria-label="Career impact highlights">
+          <article class="relative rounded-2xl border border-line bg-ink p-6 shadow-xl shadow-slate-200/70">
+            <header class="flex items-center justify-between border-b border-line pb-4">
+              <div>
+                <p class="font-mono text-[11px] uppercase tracking-[.18em] text-mist">Release notes</p>
+                <p class="mt-1 font-mono text-sm text-paper">REL-2026.10 · AI customer intelligence</p>
+              </div>
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-go/10 px-2.5 py-1 font-mono text-[11px] font-medium text-go">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Shipped
+              </span>
+            </header>
+            <dl class="divide-y divide-line/70">
+              <div class="flex items-baseline justify-between gap-4 py-3.5"><dt class="text-sm text-mist">On-time delivery across releases</dt><dd class="font-mono text-xl font-medium tabular-nums text-paper">95%</dd></div>
+              <div class="flex items-baseline justify-between gap-4 py-3.5"><dt class="text-sm text-mist">Stakeholder alignment</dt><dd class="font-mono text-xl font-medium tabular-nums text-volt">+24%</dd></div>
+              <div class="flex items-baseline justify-between gap-4 py-3.5"><dt class="text-sm text-mist">Reporting accuracy</dt><dd class="font-mono text-xl font-medium tabular-nums text-volt">+22%</dd></div>
+              <div class="flex items-baseline justify-between gap-4 py-3.5"><dt class="text-sm text-mist">Delivery velocity</dt><dd class="font-mono text-xl font-medium tabular-nums text-volt">+18%</dd></div>
+              <div class="flex items-baseline justify-between gap-4 py-3.5"><dt class="text-sm text-mist">Integrations · AI use cases governed</dt><dd class="font-mono text-xl font-medium tabular-nums text-paper">35+ · 15+</dd></div>
+            </dl>
+            <footer class="mt-3 font-mono text-[11px] text-mist">Figures from current role at HubSpot</footer>
+          </article>
+        </aside>
+      </div>
+
+      <!-- Where I've worked strip -->
+      <div class="relative mx-auto max-w-frame border-t border-line py-8">
+        <ul class="flex flex-wrap items-center gap-x-10 gap-y-3 text-mist" aria-label="Organizations I've worked with">
+          <li class="font-mono text-[11px] uppercase tracking-[.2em]">Worked with</li>
+          <li class="font-display text-2xl italic text-paper/80">HubSpot</li>
+          <li class="font-display text-2xl italic text-paper/80">First Abu Dhabi Bank</li>
+          <li class="font-display text-2xl italic text-paper/80">HCL Tech</li>
+          <li class="font-display text-2xl italic text-paper/80">Cognizant</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────── ABOUT & STACK ───────────────── -->
+    <section id="about" aria-labelledby="about-title" class="gutter border-t-4 border-volt bg-volt/[0.04]">
+      <div class="mx-auto grid max-w-frame gap-14 py-24 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <p class="font-mono text-xs uppercase tracking-[.22em] text-volt">01 · About</p>
+          <h2 id="about-title" class="mt-4 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+            The person between <span class="font-display font-normal italic">"what we need"</span> and "what we shipped."
+          </h2>
+          <div class="mt-8 space-y-5 text-[1.05rem] leading-relaxed text-mist">
+            <p>I started as a systems engineer writing Clarity PPM customizations at Cognizant. That taught me how enterprise software really gets built: slowly, with a lot of approvals.</p>
+            <p>Six years at HCL Tech made me the person who runs change and release for pharma and manufacturing clients, where a bad deployment means a stopped production line. Then I spent two years running FircoSoft sanctions screening for First Abu Dhabi Bank, where reliability is a regulatory requirement.</p>
+            <p>Now I bring that release discipline to AI products, with evaluation gates, feature flags, and model monitoring, so new ideas reach customers safely. On the side I build data tools for myself and finish an M.S. in Business Analytics at the University of Delaware.</p>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 lg:pl-6">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <article class="group rounded-2xl border border-line bg-ink p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-volt/60 hover:shadow-md">
+              <div class="flex items-center gap-3">
+                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-volt/10 text-volt">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+                </span>
+                <h3 class="text-base font-bold">Product</h3>
+              </div>
+              <ul class="mt-5 flex flex-wrap gap-2 text-[13px]">
+                <li class="rounded-full border border-line px-3 py-1 text-mist">Roadmapping</li><li class="rounded-full border border-line px-3 py-1 text-mist">Discovery</li><li class="rounded-full border border-line px-3 py-1 text-mist">PRDs</li><li class="rounded-full border border-line px-3 py-1 text-mist">OKRs</li><li class="rounded-full border border-line px-3 py-1 text-mist">Prioritization</li><li class="rounded-full border border-line px-3 py-1 text-mist">Product analytics</li>
+              </ul>
+            </article>
+
+            <article class="group rounded-2xl border border-line bg-ink p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-volt/60 hover:shadow-md sm:translate-y-8">
+              <div class="flex items-center gap-3">
+                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-volt/10 text-volt">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3v12M18 9a9 9 0 0 1-9 9"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/></svg>
+                </span>
+                <h3 class="text-base font-bold">Delivery &amp; Release</h3>
+              </div>
+              <ul class="mt-5 flex flex-wrap gap-2 text-[13px]">
+                <li class="rounded-full border border-line px-3 py-1 text-mist">Agile / Scrum</li><li class="rounded-full border border-line px-3 py-1 text-mist">Release governance</li><li class="rounded-full border border-line px-3 py-1 text-mist">Change management</li><li class="rounded-full border border-line px-3 py-1 text-mist">CI/CD</li><li class="rounded-full border border-line px-3 py-1 text-mist">Risk &amp; dependencies</li>
+              </ul>
+            </article>
+
+            <article class="group rounded-2xl border border-line bg-ink p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-volt/60 hover:shadow-md">
+              <div class="flex items-center gap-3">
+                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-volt/10 text-volt">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+                </span>
+                <h3 class="text-base font-bold">AI &amp; Data</h3>
+              </div>
+              <ul class="mt-5 flex flex-wrap gap-2 text-[13px]">
+                <li class="rounded-full border border-line px-3 py-1 text-mist">MLOps</li><li class="rounded-full border border-line px-3 py-1 text-mist">MLflow</li><li class="rounded-full border border-line px-3 py-1 text-mist">Prompt testing</li><li class="rounded-full border border-line px-3 py-1 text-mist">Python</li><li class="rounded-full border border-line px-3 py-1 text-mist">SQL</li><li class="rounded-full border border-line px-3 py-1 text-mist">Power BI</li><li class="rounded-full border border-line px-3 py-1 text-mist">Airflow</li><li class="rounded-full border border-line px-3 py-1 text-mist">APIs</li>
+              </ul>
+            </article>
+
+            <article class="group rounded-2xl border border-line bg-ink p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-volt/60 hover:shadow-md sm:translate-y-8">
+              <div class="flex items-center gap-3">
+                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-volt/10 text-volt">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
+                </span>
+                <h3 class="text-base font-bold">Platforms &amp; Compliance</h3>
+              </div>
+              <ul class="mt-5 flex flex-wrap gap-2 text-[13px]">
+                <li class="rounded-full border border-line px-3 py-1 text-mist">Jira Align</li><li class="rounded-full border border-line px-3 py-1 text-mist">Aha!</li><li class="rounded-full border border-line px-3 py-1 text-mist">ServiceNow</li><li class="rounded-full border border-line px-3 py-1 text-mist">GitHub Actions</li><li class="rounded-full border border-line px-3 py-1 text-mist">Clarity PPM</li><li class="rounded-full border border-line px-3 py-1 text-mist">FircoSoft</li><li class="rounded-full border border-line px-3 py-1 text-mist">AML</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────── FEATURED PROJECTS ───────────────── -->
+    <section id="work" aria-labelledby="work-title" class="gutter border-t-4 border-volt bg-volt/[0.035]">
+      <div class="mx-auto max-w-frame py-24">
+        <div class="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <p class="font-mono text-xs uppercase tracking-[.22em] text-volt">02 · Selected work</p>
+            <h2 id="work-title" class="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">Things I build <span class="font-display font-normal italic">for myself</span></h2>
+          </div>
+          <a href="https://github.com/KirubakaranDevaprasad" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-sm font-semibold text-mist transition hover:text-volt">
+            All repositories on GitHub
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+          </a>
+        </div>
+
+        <!-- Projects render from the PROJECTS list in the script at the bottom -->
+        <div id="projectGrid" class="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+      </div>
+    </section>
+
+    <!-- ───────────────── EXPERIENCE TIMELINE ───────────────── -->
+    <section id="experience" aria-labelledby="exp-title" class="gutter border-t-4 border-volt bg-volt/[0.04]">
+      <div class="mx-auto grid max-w-frame gap-12 py-24 lg:grid-cols-12">
+        <div class="lg:col-span-4">
+          <div class="lg:sticky lg:top-28">
+            <p class="font-mono text-xs uppercase tracking-[.22em] text-volt">03 · Experience</p>
+            <h2 id="exp-title" class="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">Fourteen years, <span class="font-display font-normal italic">four chapters</span></h2>
+            <p class="mt-6 max-w-[40ch] text-mist">Enterprise engineering, then release management, then compliance technology, and now AI product. Each step added one more layer of "it has to work in production."</p>
+
+            <div class="mt-10 rounded-2xl border border-line bg-ink p-6 shadow-sm">
+              <h3 class="font-mono text-[11px] uppercase tracking-[.2em] text-mist">Education</h3>
+              <ul class="mt-4 space-y-4 text-sm">
+                <li><p class="font-semibold text-paper">M.S., Business Analytics &amp; Information Management</p><p class="text-mist">University of Delaware · 2024 – 2026</p></li>
+                <li><p class="font-semibold text-paper">IPMX, Executive MBA program</p><p class="text-mist">IIM Lucknow · 2017 – 2018</p></li>
+                <li><p class="font-semibold text-paper">B.E., Computer Science</p><p class="text-mist">Dhanalakshmi Srinivasan College of Engg. &amp; Tech. · 2008 – 2012</p></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <ol class="relative lg:col-span-8 lg:pl-4">
+          <span aria-hidden="true" class="absolute bottom-2 left-[7px] top-2 w-px bg-gradient-to-b from-volt via-line to-transparent lg:left-[23px]"></span>
+
+          <li class="group relative pb-14 pl-10">
+            <span aria-hidden="true" class="absolute left-0 top-1.5 flex h-[15px] w-[15px] items-center justify-center rounded-full border-2 border-volt bg-ink lg:left-4"><span class="h-1.5 w-1.5 rounded-full bg-volt"></span></span>
+            <article class="lg:pl-4">
+              <p class="font-mono text-xs tabular-nums text-volt">01/2026 — Present · Remote, USA</p>
+              <h3 class="mt-2 text-2xl font-bold">Technical Product Manager</h3>
+              <p class="mt-1 text-mist">HubSpot <span class="text-line">/</span> via New Eternity</p>
+              <p class="mt-4 max-w-[62ch] leading-relaxed text-mist">Own the product lifecycle of an AI-powered customer intelligence platform covering marketing, sales, service, and success workflows. Built the AI release controls (MLflow, feature flags, evaluation gates, prompt testing) and the analytics behind executive dashboards.</p>
+              <ul class="mt-5 flex flex-wrap gap-2 font-mono text-[12px]">
+                <li class="rounded-md bg-volt/10 px-2.5 py-1 text-volt">95% on-time releases</li>
+                <li class="rounded-md bg-volt/10 px-2.5 py-1 text-volt">+18% velocity</li>
+                <li class="rounded-md bg-volt/10 px-2.5 py-1 text-volt">+22% reporting accuracy</li>
+                <li class="rounded-md bg-volt/10 px-2.5 py-1 text-volt">35+ integrations</li>
+              </ul>
+            </article>
+          </li>
+
+          <li class="group relative pb-14 pl-10">
+            <span aria-hidden="true" class="absolute left-0 top-1.5 h-[15px] w-[15px] rounded-full border-2 border-line bg-ink transition group-hover:border-volt lg:left-4"></span>
+            <article class="lg:pl-4">
+              <p class="font-mono text-xs tabular-nums text-mist">01/2022 — 08/2024 · Bangalore, India</p>
+              <h3 class="mt-2 text-2xl font-bold">Technical Product Consultant, FircoSoft (AML)</h3>
+              <p class="mt-1 text-mist">First Abu Dhabi Bank <span class="text-line">/</span> via Okool Consultancy</p>
+              <p class="mt-4 max-w-[62ch] leading-relaxed text-mist">Led FircoSoft Screen, Keep, Trust Batch Screening, and Filter for sanctions screening. Managed environments, vendor escalations, upgrades, and vulnerability remediation. Also built DCF and comparable-company models for a cross-border acquisition.</p>
+              <ul class="mt-5 flex flex-wrap gap-2 font-mono text-[12px]">
+                <li class="rounded-md border border-line px-2.5 py-1 text-paper/80">$250M acquisition modeled</li>
+                <li class="rounded-md border border-line px-2.5 py-1 text-paper/80">+15% forecast accuracy</li>
+                <li class="rounded-md border border-line px-2.5 py-1 text-paper/80">4 FircoSoft modules</li>
+              </ul>
+            </article>
+          </li>
+
+          <li class="group relative pb-14 pl-10">
+            <span aria-hidden="true" class="absolute left-0 top-1.5 h-[15px] w-[15px] rounded-full border-2 border-line bg-ink transition group-hover:border-volt lg:left-4"></span>
+            <article class="lg:pl-4">
+              <p class="font-mono text-xs tabular-nums text-mist">05/2015 — 12/2021 · Hyderabad, India</p>
+              <h3 class="mt-2 text-2xl font-bold">Technical Solutions &amp; Product Consultant</h3>
+              <p class="mt-1 text-mist">HCL Technologies</p>
+              <p class="mt-4 max-w-[62ch] leading-relaxed text-mist">Ran change and release management for a pharmaceutical client and European operations for a major US manufacturer. Covered impact assessments, deployment planning, approvals, and escalations. Supported leadership on a $5M debt issuance and a live M&amp;A deal.</p>
+              <ul class="mt-5 flex flex-wrap gap-2 font-mono text-[12px]">
+                <li class="rounded-md border border-line px-2.5 py-1 text-paper/80">6.5 years</li>
+                <li class="rounded-md border border-line px-2.5 py-1 text-paper/80">Pharma &amp; manufacturing</li>
+                <li class="rounded-md border border-line px-2.5 py-1 text-paper/80">$5M debt issuance</li>
+              </ul>
+            </article>
+          </li>
+
+          <li class="group relative pl-10">
+            <span aria-hidden="true" class="absolute left-0 top-1.5 h-[15px] w-[15px] rounded-full border-2 border-line bg-ink transition group-hover:border-volt lg:left-4"></span>
+            <article class="lg:pl-4">
+              <p class="font-mono text-xs tabular-nums text-mist">06/2012 — 05/2015 · Chennai, India</p>
+              <h3 class="mt-2 text-2xl font-bold">System Engineer</h3>
+              <p class="mt-1 text-mist">Cognizant Technology Solutions</p>
+              <p class="mt-4 max-w-[62ch] leading-relaxed text-mist">Clarity PPM custom development and web development. Business process analysis, functional advisory, and proof-of-concept work for enterprise clients.</p>
+              <ul class="mt-5 flex flex-wrap gap-2 font-mono text-[12px]">
+                <li class="rounded-md border border-line px-2.5 py-1 text-paper/80">Clarity PPM</li>
+                <li class="rounded-md border border-line px-2.5 py-1 text-paper/80">Proof-of-concepts</li>
+              </ul>
+            </article>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ───────────────── CONTACT SYSTEM ───────────────── -->
+    <section id="contact" aria-labelledby="contact-title" class="gutter border-t-4 border-volt bg-volt/[0.035]">
+      <div class="mx-auto max-w-frame py-24">
+        <div class="grid gap-10 lg:grid-cols-12">
+          <div class="lg:col-span-5">
+            <p class="font-mono text-xs uppercase tracking-[.22em] text-volt">04 · Contact</p>
+            <h2 id="contact-title" class="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">Have a product that <span class="font-display font-normal italic">needs to land?</span></h2>
+
+            <!-- Availability badge -->
+            <div class="mt-8 inline-flex items-center gap-3 rounded-2xl border border-go/30 bg-go/5 px-4 py-3">
+              <span class="ping relative inline-block h-2.5 w-2.5 rounded-full bg-go text-go"></span>
+              <div>
+                <p class="text-sm font-bold text-paper" data-availability-title>Open to new opportunities</p>
+                <p class="text-xs text-mist" data-availability-detail>Product Manager, TPM, and Product Owner roles · Remote or NJ/NY</p>
+              </div>
+            </div>
+
+            <address class="mt-10 space-y-5 not-italic">
+              <div>
+                <p class="font-mono text-[11px] uppercase tracking-[.2em] text-mist">Email</p>
+                <div class="mt-1 flex flex-wrap items-center gap-3">
+                  <span id="emailText" class="select-all text-lg font-semibold text-paper">dkirubakaran140@gmail.com</span>
+                  <button id="copyEmail" type="button" class="rounded-md border border-line px-2.5 py-1 font-mono text-[11px] text-mist transition hover:border-volt hover:text-volt">Copy</button>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <a href="https://www.linkedin.com/in/kirugiri456/" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold transition hover:border-volt hover:text-volt">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.5c0-1.3-.02-3-1.83-3-1.84 0-2.12 1.43-2.12 2.9V21H9z"/></svg>
+                  LinkedIn
+                </a>
+                <a href="https://github.com/KirubakaranDevaprasad" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold transition hover:border-volt hover:text-volt">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>
+                  GitHub
+                </a>
+              </div>
+            </address>
+          </div>
+
+          <!-- Contact form -->
+          <div class="lg:col-span-7">
+            <form id="contactForm" class="rounded-3xl border border-line bg-ink p-6 shadow-sm sm:p-8" novalidate aria-describedby="formNote">
+              <fieldset class="grid gap-5 sm:grid-cols-2">
+                <legend class="sr-only">Send a message</legend>
+                <div class="flex flex-col gap-2">
+                  <label for="cf-name" class="text-sm font-semibold">Name</label>
+                  <input id="cf-name" name="name" type="text" autocomplete="name" required placeholder="Jane Smith" class="rounded-xl border border-line bg-ink px-4 py-3 text-paper placeholder:text-mist/70 transition focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30">
+                  <p class="hidden text-xs text-rose-600" data-error-for="cf-name">Please enter your name.</p>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <label for="cf-email" class="text-sm font-semibold">Email</label>
+                  <input id="cf-email" name="email" type="email" autocomplete="email" required placeholder="jane@company.com" class="rounded-xl border border-line bg-ink px-4 py-3 text-paper placeholder:text-mist/70 transition focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30">
+                  <p class="hidden text-xs text-rose-600" data-error-for="cf-email">Enter a valid email so I can reply.</p>
+                </div>
+                <div class="flex flex-col gap-2 sm:col-span-2">
+                  <label for="cf-topic" class="text-sm font-semibold">What's this about?</label>
+                  <select id="cf-topic" name="topic" class="appearance-none rounded-xl border border-line bg-ink px-4 py-3 pr-10 text-paper transition focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30">
+                    <option>A full-time role</option>
+                    <option>A consulting engagement</option>
+                    <option>One of my projects</option>
+                    <option>Just saying hello</option>
+                  </select>
+                </div>
+                <div class="flex flex-col gap-2 sm:col-span-2">
+                  <label for="cf-message" class="text-sm font-semibold">Message</label>
+                  <textarea id="cf-message" name="message" rows="5" required placeholder="A few lines about the team, the product, and the timeline." class="resize-y rounded-xl border border-line bg-ink px-4 py-3 text-paper placeholder:text-mist/70 transition focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30"></textarea>
+                  <p class="hidden text-xs text-rose-600" data-error-for="cf-message">Add a short message (at least 10 characters).</p>
+                </div>
+              </fieldset>
+              <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+                <p id="formNote" class="max-w-[36ch] text-xs text-mist">I usually reply within two working days.</p>
+                <button id="sendBtn" type="submit" class="inline-flex items-center gap-2 rounded-full bg-volt px-6 py-3 text-sm font-bold text-ink transition hover:bg-paper disabled:opacity-60">
+                  Send message
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>
+                </button>
+              </div>
+              <p id="formStatus" class="mt-4 hidden rounded-xl px-4 py-3 text-sm" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+
+        <!-- Engagement estimator -->
+        <article id="estimator" aria-labelledby="est-title" class="mt-16 overflow-hidden rounded-3xl border border-line bg-ink shadow-sm">
+          <div class="grid lg:grid-cols-12">
+            <div class="border-b border-line p-6 sm:p-8 lg:col-span-7 lg:border-b-0 lg:border-r">
+              <div class="flex flex-wrap items-center gap-3">
+                <h3 id="est-title" class="text-2xl font-bold">Scope an engagement</h3>
+                <span class="rounded-full border border-line px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-mist">Simulated</span>
+              </div>
+              <p class="mt-2 max-w-[56ch] text-sm text-mist">A rough sizing tool based on how these projects usually run. Move the inputs to see the effect on duration and phases, then send the estimate with your message.</p>
+
+              <form id="estForm" class="mt-8 grid gap-7" aria-label="Estimator inputs">
+                <div class="flex flex-col gap-2">
+                  <label for="est-type" class="text-sm font-semibold">Type of work</label>
+                  <select id="est-type" class="appearance-none rounded-xl border border-line bg-ink px-4 py-3 pr-10 text-paper focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30">
+                    <option value="discovery">Product discovery &amp; roadmap</option>
+                    <option value="release" selected>Release governance setup</option>
+                    <option value="ai">AI / ML release controls</option>
+                    <option value="analytics">Analytics &amp; KPI dashboards</option>
+                    <option value="data">Data pipeline (ETL) build</option>
+                    <option value="screening">Sanctions screening configuration</option>
+                  </select>
+                </div>
+
+                <div class="grid gap-7 sm:grid-cols-3">
+                  <div class="flex flex-col gap-3">
+                    <div class="flex items-baseline justify-between"><label for="est-complex" class="text-sm font-semibold">Complexity</label><output id="out-complex" for="est-complex" class="font-mono text-sm text-volt">Medium</output></div>
+                    <input id="est-complex" type="range" min="1" max="5" step="1" value="3">
+                  </div>
+                  <div class="flex flex-col gap-3">
+                    <div class="flex items-baseline justify-between"><label for="est-int" class="text-sm font-semibold">Integrations</label><output id="out-int" for="est-int" class="font-mono text-sm tabular-nums text-volt">4</output></div>
+                    <input id="est-int" type="range" min="0" max="20" step="1" value="4">
+                  </div>
+                  <div class="flex flex-col gap-3">
+                    <div class="flex items-baseline justify-between"><label for="est-team" class="text-sm font-semibold">Team size</label><output id="out-team" for="est-team" class="font-mono text-sm tabular-nums text-volt">5</output></div>
+                    <input id="est-team" type="range" min="1" max="12" step="1" value="5">
+                  </div>
+                </div>
+
+                <fieldset>
+                  <legend class="text-sm font-semibold">Regulated environment?</legend>
+                  <div class="mt-3 inline-flex rounded-full border border-line p-1" role="radiogroup">
+                    <label class="cursor-pointer"><input type="radio" name="est-reg" value="no" class="peer sr-only" checked><span class="block rounded-full px-4 py-1.5 text-sm text-mist transition peer-checked:bg-volt peer-checked:font-semibold peer-checked:text-ink peer-focus-visible:ring-2 peer-focus-visible:ring-volt/50">No</span></label>
+                    <label class="cursor-pointer"><input type="radio" name="est-reg" value="yes" class="peer sr-only"><span class="block rounded-full px-4 py-1.5 text-sm text-mist transition peer-checked:bg-volt peer-checked:font-semibold peer-checked:text-ink peer-focus-visible:ring-2 peer-focus-visible:ring-volt/50">Yes (finance, pharma)</span></label>
+                  </div>
+                </fieldset>
+              </form>
+            </div>
+
+            <div class="flex flex-col p-6 sm:p-8 lg:col-span-5" aria-live="polite">
+              <p class="font-mono text-[11px] uppercase tracking-[.2em] text-mist">Estimated duration</p>
+              <p class="mt-2 flex items-baseline gap-2">
+                <span id="est-range" class="text-6xl font-extrabold tabular-nums tracking-tight">6–9</span>
+                <span class="font-display text-2xl italic text-mist">weeks</span>
+              </p>
+              <p id="est-confidence" class="mt-2 text-sm text-mist">Confidence: medium</p>
+
+              <div class="mt-8">
+                <p class="font-mono text-[11px] uppercase tracking-[.2em] text-mist">Phase breakdown</p>
+                <div id="est-bar" class="mt-3 flex h-3 w-full overflow-hidden rounded-full bg-line" role="img" aria-label="Phase breakdown"></div>
+                <ul id="est-phases" class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm"></ul>
+              </div>
+
+              <button id="useEstimate" type="button" class="mt-auto inline-flex items-center justify-center gap-2 self-start rounded-full border border-volt px-5 py-2.5 text-sm font-bold text-volt transition hover:bg-volt hover:text-ink lg:mt-10">
+                Add estimate to my message
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- ───────────────── FOOTER ───────────────── -->
+  <footer class="gutter border-t border-line">
+    <div class="mx-auto flex max-w-frame flex-wrap items-center justify-between gap-4 py-10 text-sm text-mist">
+      <p>© <span id="year">2026</span> Kirubakaran Devaprasad</p>
+      <p class="font-mono text-xs">Hand-built with HTML, Tailwind &amp; vanilla JS · Hosted on GitHub Pages</p>
+      <a href="#top" class="inline-flex items-center gap-1 transition hover:text-volt">Back to top
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+      </a>
+    </div>
+  </footer>
+
+  <script>
+    /* ════════════════════════════════════════════════════════════
+       CONFIG: edit these values to update the site
+       ════════════════════════════════════════════════════════════ */
+    const CONFIG = {
+      email: "dkirubakaran140@gmail.com",
+      // Optional: paste a Formspree endpoint (https://formspree.io) to receive
+      // form messages directly. Leave empty to open the visitor's email app instead.
+      formEndpoint: "",
+      availability: {
+        short: "Open to roles",
+        title: "Open to new opportunities",
+        detail: "Product Manager, TPM, and Product Owner roles · Remote or NJ/NY",
+      },
+    };
+
+    /* Projects. The first one with featured: true gets the wide card.
+       visual: "pipeline" | "chart" | "blocks" picks the built-in SVG preview.
+       To use a real screenshot instead, set image: "screenshots/my-app.png". */
+    const PROJECTS = [
+      {
         title: "Daily Stock Update",
         kicker: "Data engineering · ETL",
         featured: true,
